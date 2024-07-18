@@ -67,7 +67,14 @@ else:
     # pick some nodes to mask (i.e. reserved for testing) for inductive setting
     total_node_set = set(np.unique(np.hstack([g_df.u.values, g_df.i.values])))
     num_total_unique_nodes = len(total_node_set)
-    mask_node_set = set(random.sample(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])), int(0.1 * num_total_unique_nodes)))
+    mask_node_set = set(
+        random.sample(
+            list(
+                set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time]))
+            ),
+            int(0.1 * num_total_unique_nodes)
+        )
+    )
     mask_src_flag = g_df.u.map(lambda x: x in mask_node_set).values
     mask_dst_flag = g_df.i.map(lambda x: x in mask_node_set).values
     none_mask_node_flag = (1 - mask_src_flag) * (1 - mask_dst_flag)
@@ -118,7 +125,7 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (200*args.bs, rlimit[1]))
 
 # model initialization
-device = torch.device('cuda:{}'.format(GPU))
+device = torch.device('cuda:{}'.format(GPU) if torch.cuda.is_available() else 'cpu')
 cawn = CAWN(n_feat, e_feat, agg=AGG,
             num_layers=NUM_LAYER, use_time=USE_TIME, attn_agg_method=ATTN_AGG_METHOD, attn_mode=ATTN_MODE,
             n_head=ATTN_NUM_HEADS, drop_out=DROP_OUT, pos_dim=POS_DIM, pos_enc=POS_ENC,
